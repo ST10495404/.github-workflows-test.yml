@@ -1,0 +1,180 @@
+import java.util.Scanner;
+import java.util.Random;
+import javax.swing.JOptionPane;
+
+public class QuickChatApp {
+
+    static String registeredUsername = "";
+    static String registeredPassword = "";
+    static String registeredCell = "";
+    static String firstName = "";
+    static String lastName = "";
+    static int totalMessagesSent = 0;
+
+    public static void main(String[] args) {
+        Scanner input = new Scanner(System.in);
+
+        // Registration
+        System.out.println("----- User Registration -----");
+        System.out.print("Enter your first name: ");
+        firstName = input.nextLine();
+
+        System.out.print("Enter your last name: ");
+        lastName = input.nextLine();
+
+        System.out.print("Enter username (must include _ and <= 5 characters): ");
+        registeredUsername = input.nextLine();
+
+        while (!checkUserName(registeredUsername)) {
+            System.out.print("Invalid username. Try again: ");
+            registeredUsername = input.nextLine();
+        }
+
+        System.out.print("Enter password (8+ chars, uppercase, digit, special char): ");
+        registeredPassword = input.nextLine();
+
+        while (!checkPasswordComplexity(registeredPassword)) {
+            System.out.print("Invalid password. Try again: ");
+            registeredPassword = input.nextLine();
+        }
+
+        System.out.print("Enter cell number (+27 followed by 9 digits): ");
+        registeredCell = input.nextLine();
+
+        while (!checkCellPhoneNumber(registeredCell)) {
+            System.out.print("Invalid cell number. Try again: ");
+            registeredCell = input.nextLine();
+        }
+
+        System.out.println("User registered successfully!");
+
+        // Login
+        System.out.println("\n----- User Login -----");
+        System.out.print("Enter username: ");
+        String loginUsername = input.nextLine();
+
+        System.out.print("Enter password: ");
+        String loginPassword = input.nextLine();
+
+        if (loginUser(loginUsername, loginPassword)) {
+            System.out.println("Welcome to QuickChat.");
+
+            System.out.print("How many messages would you like to send? ");
+            int messageCount = input.nextInt();
+            input.nextLine(); // Consume newline
+
+            Message[] messages = new Message[messageCount];
+
+            boolean quit = false;
+            while (!quit) {
+                System.out.println("\nMenu:\n1) Send Messages\n2) Show Recently Sent (Coming Soon)\n3) Quit");
+                System.out.print("Enter option: ");
+                int option = input.nextInt();
+                input.nextLine();
+
+                switch (option) {
+                    case 1:
+                        for (int i = 0; i < messageCount; i++) {
+                            messages[i] = new Message();
+                            messages[i].captureMessageData(input);
+                            String choice = messages[i].sendMessageChoice(input);
+                            if (choice.equalsIgnoreCase("Send")) {
+                                totalMessagesSent++;
+                                JOptionPane.showMessageDialog(null, messages[i].printMessageDetails());
+                            } else if (choice.equalsIgnoreCase("Store")) {
+                                JOptionPane.showMessageDialog(null, "Message successfully stored.");
+                            } else {
+                                JOptionPane.showMessageDialog(null, "Press 0 to delete message.");
+                            }
+                        }
+                        System.out.println("Total messages sent: " + totalMessagesSent);
+                        break;
+                    case 2:
+                        System.out.println("Coming Soon.");
+                        break;
+                    case 3:
+                        quit = true;
+                        break;
+                    default:
+                        System.out.println("Invalid option.");
+                        break;
+                }
+            }
+
+        } else {
+            System.out.println("Username or password incorrect.");
+        }
+    }
+
+    public static boolean checkUserName(String username) {
+        return username.contains("_") && username.length() <= 5;
+    }
+
+    public static boolean checkPasswordComplexity(String password) {
+        return password.length() >= 8 &&
+               password.matches(".*[A-Z].*") &&
+               password.matches(".*[0-9].*") &&
+               password.matches(".*[!@#$%^&*().,?\":{}|<>].*");
+    }
+
+    public static boolean checkCellPhoneNumber(String cellNumber) {
+        return cellNumber.matches("^\\+27\\d{9}$");
+    }
+
+    public static boolean loginUser(String username, String password) {
+        return username.equals(registeredUsername) && password.equals(registeredPassword);
+    }
+}
+
+class Message {
+    private String messageID;
+    private int messageNumber;
+    private String recipient;
+    private String messageText;
+    private String messageHash;
+
+    private static int messageCounter = 0;
+
+    public void captureMessageData(Scanner input) {
+        Random rand = new Random();
+        messageID = String.valueOf(1000000000 + rand.nextInt(900000000));
+        messageNumber = messageCounter;
+        messageCounter++;
+
+        System.out.print("Enter recipient cell number (+27...): ");
+        recipient = input.nextLine();
+        while (!recipient.matches("^\\+27\\d{9}$")) {
+            System.out.print("Invalid. Try again: ");
+            recipient = input.nextLine();
+        }
+
+        System.out.print("Enter message (max 250 chars): ");
+        messageText = input.nextLine();
+        while (messageText.length() > 250) {
+            System.out.println("Message exceeds 250 characters by " + (messageText.length() - 250) + ", please reduce size.");
+            messageText = input.nextLine();
+        }
+
+        messageHash = createMessageHash();
+    }
+
+    public String createMessageHash() {
+        String[] words = messageText.split(" ");
+        String firstWord = words.length > 0 ? words[0] : "";
+        String lastWord = words.length > 1 ? words[words.length - 1] : "";
+        return messageID.substring(0, 2) + ":" + messageNumber + ":" + (firstWord + lastWord).toUpperCase();
+    }
+
+    public String sendMessageChoice(Scanner input) {
+        System.out.println("Choose:\nSend\nStore\nDisregard");
+        String choice = input.nextLine();
+        return choice;
+    }
+
+    public String printMessageDetails() {
+        return "Message ID: " + messageID +
+               "\nMessage Hash: " + messageHash +
+               "\nRecipient: " + recipient +
+               "\nMessage: " + messageText;
+    }
+}

@@ -1,0 +1,29 @@
+import org.junit.Test;
+import static org.junit.Assert.*;
+
+public class QuickChatAppTest {
+
+    @Test
+    public void testValidMessageLength() {
+        String message = "Hi Mike, can you join us for dinner tonight";
+        assertTrue(message.length() <= 250);
+    }
+
+    @Test
+    public void testInvalidMessageLength() {
+        String longMessage = "a".repeat(260);
+        assertFalse(longMessage.length() <= 250);
+    }
+
+    @Test
+    public void testValidCellNumber() {
+        String cellNumber = "+27718693002";
+        assertTrue(cellNumber.startsWith("+27") && cellNumber.length() == 13);
+    }
+
+    @Test
+    public void testInvalidCellNumber() {
+        String cellNumber = "08575975889"; // No +27
+        assertFalse(cellNumber.startsWith("+27"));
+    }
+}
